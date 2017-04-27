@@ -134,11 +134,61 @@ State Machine Function Definitions
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
+  
 static void UserApp1SM_Idle(void)
 {
 
-} /* end UserApp1SM_Idle() */
-    
+  static u32 u32Counter=0;
+  static bool bLightOn=FALSE;
+  static u32 u32COUNTER_MS_Variable = 500;
+  static u32 u32TimeCounter = 0;
+  static u32 u32LoopCounter = 500;
+  static bool u32Case=TRUE;
+  u32TimeCounter++;
+  
+  if(u32TimeCounter==u32COUNTER_MS_Variable)
+  {
+    u32TimeCounter=0;
+    if(bLightOn)
+    {
+      HEARTBEAT_ON();
+    }
+    else
+    {
+      HEARTBEAT_OFF();
+      /*count the time of every rate*/
+      u32LoopCounter+=u32LoopCounter;
+    }
+    /*reverse led state*/
+    bLightOn=!bLightOn;
+  }
+    /*change the rate every two seconds*/
+  if(u32LoopCounter >= 2000 )
+  {
+    /*control the rate from low to fast*/
+    if(u32Case)
+    {
+          u32COUNTER_MS_Variable = u32COUNTER_MS_Variable >> 1;
+          u32LoopCounter=u32COUNTER_MS_Variable;
+    }
+    /*control the rate from fast to low*/
+    else
+    {
+          u32COUNTER_MS_Variable = u32COUNTER_MS_Variable << 1;
+          u32LoopCounter=u32COUNTER_MS_Variable;
+    }
+    /*change the rate direction*/
+    if(u32COUNTER_MS_Variable < 2)
+    { 
+        u32Case=FALSE;
+    }
+    if(u32COUNTER_MS_Variable > 500)
+    {
+        u32Case=TRUE;
+    }
+  }
+}
+/* end UserApp1SM_Idle() */  
 #if 0
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Handle an error */
