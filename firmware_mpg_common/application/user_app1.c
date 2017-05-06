@@ -59,7 +59,7 @@ Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
-
+static u8 UserApp1_u8FinalCode[10]=0;
 
 /**********************************************************************************************************************
 Function Definitions
@@ -67,11 +67,120 @@ Function Definitions
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Public functions                                                                                                   */
+static u8 u8ButtonValue(void);
+static u8 u8ConfirmValue(void);
+void UserApp1_ChooseMode(void);
+void UserApp1_SetCode(void);
+static u8 u8ButtonValue(void);
+static u8 u8ConfirmValue(void);
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Protected functions                                                                                                */
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------------------------------------------------
+Function: u8ButtonValue
+
+Description:To get the button return value(0,1,2)*/
+
+static u8 u8ButtonValue(void)
+{
+  u8 u8GetValue=4;
+  if(IsButtonPressed(BUTTON0))
+  {
+    u8GetValue=0;
+  }
+  if(IsButtonPressed(BUTTON1))
+  {
+     u8GetValue=1;
+  }
+  if(IsButtonPressed(BUTTON2))
+  {
+     u8GetValue=2;
+  }
+  return u8GetValue;
+}/*end u8ButtonValue()*/
+
+
+/*----------------------------------------------------------------------------------------------------------------------
+Function: u8ConfirmValue
+
+Description:To check if confirm button(button3) is pressed*/
+static u8 u8ConfirmValue(void)
+{
+  u8 u8ConfirmValue=5;
+  if(IsButtonPressed(BUTTON3))
+  {
+    u8ConfirmValue=3;
+  }
+  return u8ConfirmValue;
+}/*end u8ConfirmValue()*/
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1_ChangeMode()
+Description:To choose whether to reset code*/
+void UserApp1_ChooseMode(void)
+{
+  /*check the mode*/
+  if(IsButtonHeld(BUTTON3,2000))
+  {
+    LedBlink(GREEN,500);
+    LedBlink(RED,500);
+    /*start to reset the code*/
+    UserApp1_StateMachine=UserApp1_SetCode;
+  }
+}/*end UserApp1_ChooseMode()*/
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1_SetCode()
+Description:To set a new code*/
+void UserApp1_SetCode(void)
+{
+  static u8 u8CodeValue=0;
+  static u8 u8Confirm=0;
+  static u8 u8ArryNum=0;
+  static bool bWhiteOn=TRUE;
+  static u32 u32TimeCounter=0;
+  
+    /*set the new code*/
+    u8CodeValue=u8ButtonValue();
+    u8Confirm=u8ConfirmValue();
+    
+    if(u8CodeValue!=4)
+    {
+      UserApp1_u8FinalCode[u8ArryNum]=u8CodeValue;
+      u8ArryNum++;
+      bWhiteOn=TRUE;
+    }
+    /*when enter a code,white led will blink*/
+    if(bWhiteOn)
+    {
+      LedOn(WHITE);
+      u32TimeCounter++;
+      if(u32TimeCounter>500)
+      {
+         LedOff(WHITE);
+         u32TimeCounter=0;
+         bWhiteOn=FALSE;
+      }
+    }
+    /*all the code have been scanfed*/
+    if(u8Confirm!=5||u8ArryNum>8)
+    {
+      LedOff(RED);
+      LedOff(GREEN);
+      LedOff(WHITE); 
+      u8ArryNum=0;
+      UserApp1_StateMachine=UserApp1SM_Idle;
+    }
+    
+  
+}/*end UserApp1_SetCode()*/
+
 
 /*--------------------------------------------------------------------------------------------------------------------
 Function: UserApp1Initialize
@@ -87,18 +196,34 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
+    /*check if need to set new code*/
+   
+   
+    LedOff(BLUE);
+    LedOff(WHITE);
+    LedOff(CYAN);
+    LedOff(GREEN);
+    LedOff(ORANGE);
+    LedOff(RED);
+    LedOff(YELLOW);
+    LedOff(PURPLE);
+    
  
-  /* If good initialization, set state to Idle */
+    UserApp1_StateMachine=UserApp1_ChooseMode;
+    
+}   
+   /* If good initialization, set state to Idle 
   if( 1 )
   {
     UserApp1_StateMachine = UserApp1SM_Idle;
   }
   else
   {
-    /* The task isn't properly initialized, so shut it down and don't run */
+     The task isn't properly initialized, so shut it down and don't run 
     UserApp1_StateMachine = UserApp1SM_FailedInit;
-  }
-
+  }   
+      
+      
 } /* end UserApp1Initialize() */
 
   
@@ -119,12 +244,13 @@ Promises:
 void UserApp1RunActiveState(void)
 {
   UserApp1_StateMachine();
-
 } /* end UserApp1RunActiveState */
 
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-/* Private functions                                                                                                  */
+/* Private functions    
+                                                                                              */
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 
@@ -134,9 +260,74 @@ State Machine Function Definitions
 
 /*-------------------------------------------------------------------------------------------------------------------*/
 /* Wait for ??? */
+
 static void UserApp1SM_Idle(void)
 {
-
+    static u8 u8CodeValue=0;
+    static u8 u8Confirm=0;
+    static u32 u32EnterCode[]=0;
+    static u8  u8ArryNum=0;
+    static bool bWhiteOn=TRUE;
+    static u8 u8index=0;
+    static u8 u8CodeCheck=0;
+    static u32 u32TimeCounter=0;
+    
+    /*locked*/
+    LedOn(RED);
+    
+    u8CodeValue=u8ButtonValue();
+    u8Confirm=u8ConfirmValue();
+    /*enter the code */
+    if(u8CodeValue!=4)
+    {
+      u32EnterCode[u8ArryNum]=u8CodeValue;
+      u8ArryNum++;
+      bWhiteOn=TRUE;
+    }
+    /*when enter a code,white led will blink*/
+    if(bWhiteOn)
+    {
+      LedOn(WHITE);
+      u32TimeCounter++;
+      if(u32TimeCounter>500)
+      {
+         LedOff(WHITE);
+         u32TimeCounter=0;
+         bWhiteOn=FALSE;
+      }
+    }
+  /*check the code*/
+  if(u8Confirm!=5||u8ArryNum>8)
+  {
+    for(u8index=0;u8index<=u8ArryNum;u8ArryNum++)
+    {
+     if(u32EnterCode[u8index]!=UserApp1_u8FinalCode[u8index])
+     {
+       /*the code is wrong*/
+       u8CodeCheck=1;
+        break;
+     }
+    }
+    if(u8CodeCheck!=1)
+    {
+      /*the code is right*/
+      u8CodeCheck=2;
+    }
+  }
+  
+  /*set which led blink*/
+  if(u8CodeCheck==1)
+  {
+    LedOff(WHITE);
+    LedOn(RED);
+  }
+  if(u8CodeCheck==2)
+  {
+    LedOff(WHITE);
+    LedOn(GREEN);
+    LedOff(RED); 
+  }
+        
 } /* end UserApp1SM_Idle() */
     
 #if 0
