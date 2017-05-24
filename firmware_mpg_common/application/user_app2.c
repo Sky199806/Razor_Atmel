@@ -108,7 +108,7 @@ Promises:
   - UserApp2_sUserLedCommandList is an empty list.
 */
 void LedDisplayStartList(void)
-{
+{                                       
   LedDisplayListNodeType* psNodeParser;
   LedDisplayListNodeType* psNodeToKill;
   

@@ -48,6 +48,7 @@ void UserApp1RunActiveState(void);
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Private functions                                                                                                  */
+
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 
@@ -55,11 +56,12 @@ void UserApp1RunActiveState(void);
 State Machine Declarations
 ***********************************************************************************************************************/
 static void UserApp1SM_Idle(void);    
-
 static void UserApp1SM_Error(void);         
 static void UserApp1SM_FailedInit(void);        
-
-
+static void UserApp1FirstChooseModeState(void);  
+static void UserApp1Mode1(void);
+static void UserApp1Mode2(void);
+static void UserApp1Mode3(void);
 #endif /* __USER_APP1_H */
 
 
