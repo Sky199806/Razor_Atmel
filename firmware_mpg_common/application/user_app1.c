@@ -156,10 +156,12 @@ To help user program Led command sequence.
 */
 static void UserApp1Mode1(void)
 {
+    static bool bLedCommand=FALSE;
     static bool bOnInput=TRUE;
     static bool bOffInput=FALSE;
     static u8 index=2;
     static u8 indexCheck=2;
+    
     
     static bool bMessageon = TRUE;
     static u32 u32OnTime=0;
@@ -178,63 +180,123 @@ static void UserApp1Mode1(void)
       /*set the led*/
 if(G_u8DebugScanfCharCount == 1)
 {
-      if(G_au8DebugScanfBuffer[0]=='R')
+      if(G_au8DebugScanfBuffer[0]=='R'||G_au8DebugScanfBuffer[0]=='r')
       {
-        eUserCommand.eLED = RED;        
+        eUserCommand.eLED = RED; 
+        bLedCommand=TRUE;
       }
-      if(G_au8DebugScanfBuffer[0]=='O')
+      if(G_au8DebugScanfBuffer[0]=='O'||G_au8DebugScanfBuffer[0]=='o')
       {
-        eUserCommand.eLED = ORANGE;        
+        eUserCommand.eLED = ORANGE;
+        bLedCommand=TRUE;        
       }
-      if(G_au8DebugScanfBuffer[0]=='Y')
+      if(G_au8DebugScanfBuffer[0]=='Y'||G_au8DebugScanfBuffer[0]=='y')
       {
-        eUserCommand.eLED = YELLOW;        
+        eUserCommand.eLED = YELLOW; 
+        bLedCommand=TRUE;
       }
-      if(G_au8DebugScanfBuffer[0]=='G')
+      if(G_au8DebugScanfBuffer[0]=='G'||G_au8DebugScanfBuffer[0]=='g')
       {
-        eUserCommand.eLED = GREEN;        
+        eUserCommand.eLED = GREEN;   
+        bLedCommand=TRUE;
       }
-      if(G_au8DebugScanfBuffer[0]=='B')
+      if(G_au8DebugScanfBuffer[0]=='B'||G_au8DebugScanfBuffer[0]=='b')
       {
-        eUserCommand.eLED = BLUE;        
+        eUserCommand.eLED = BLUE;  
+        bLedCommand=TRUE;
       }
-      if(G_au8DebugScanfBuffer[0]=='P')
+      if(G_au8DebugScanfBuffer[0]=='P'||G_au8DebugScanfBuffer[0]=='p')
       {
-        eUserCommand.eLED = PURPLE;        
+        eUserCommand.eLED = PURPLE;   
+        bLedCommand=TRUE;
       }
-      if(G_au8DebugScanfBuffer[0]=='W')
+      if(G_au8DebugScanfBuffer[0]=='W'||G_au8DebugScanfBuffer[0]=='w')
       {
-        eUserCommand.eLED = WHITE;        
+        eUserCommand.eLED = WHITE;    
+        bLedCommand=TRUE;
+      }
+      if(G_au8DebugScanfBuffer[0]=='\r')
+      {
+        bLedCommand=TRUE;
       }
       /*to give some debug information*/
-#if 0
-      else
-      { 
+
+      if(!bLedCommand)
+      {
         DebugLineFeed();
         DebugPrintf("The led must be one of the eight kinds\n\r");
         DebugLineFeed();
-        DebugPrintf("1: ");
-        
-        
-        //G_u8DebugScanfCharCount=0;
-        //G_au8DebugScanfBuffer[0]='\0';
+        /*the initial value of u8Number is 2,it will only add when a whole command is input*/
+        DebugPrintNumber(u8Number-1);
+        DebugPrintf(": "); 
+        /*reset the Led input condition*/
+        G_u8DebugScanfCharCount=0;
+        G_au8DebugScanfBuffer[0]='\0';
       }
-#endif
+
+
 }
+
   /*set on time*/
  if(bOnInput)
  {
+#if 0
+   if(G_au8DebugScanfBuffer[index]=='\b')
+   {
+     u32OnTime=(u32OnTime-G_au8DebugScanfBuffer[index-1])/10;
+     index++;
+     break;
+     
+   }
+#endif
   if(G_u8DebugScanfCharCount >= 3)
   { 
     if(G_au8DebugScanfBuffer[index]!='-')
-    {
+    {   
       /*to add when you have scanf a char*/
       if(indexCheck==index)
       {
-      /*get the number you have scanfed*/
-      u32OnTime = u32OnTime*10 + (G_au8DebugScanfBuffer[index]-'0');
-      index++;
-      }
+        /*if user type the wrong time,they can backspace*/
+         if(G_au8DebugScanfBuffer[index]=='\b')
+         {
+           
+           u32OnTime=(u32OnTime-(G_au8DebugScanfBuffer[index-1]-'0'))/10;
+           index++;       
+         }
+         else
+         {
+          /*get the number you have scanfed*/
+          u32OnTime = u32OnTime*10 + (G_au8DebugScanfBuffer[index]-'0');
+          index++;
+          /*check if the input is right,30-39 is the Ascll of 0-9*/
+         }
+
+
+               if((G_au8DebugScanfBuffer[index-1]<0x30||G_au8DebugScanfBuffer[index-1]>0x39)&&G_au8DebugScanfBuffer[index-1]!='\b')
+               {
+                           /*reset code*/
+                           bLedCommand=FALSE;
+                           u32OnTime=0;
+                           u32OffTime=0;
+                           index = 2;
+                           indexCheck = 2;
+                           for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+                               {
+                                 G_au8DebugScanfBuffer[i] = '\0';
+                               }
+                           G_u8DebugScanfCharCount = 0;
+                           bOnInput = TRUE;
+                           bOffInput = FALSE;
+                           /*print the current serial number and helping information*/       
+                           DebugLineFeed();
+                           DebugPrintf("invalid command please check carefully and command again");
+                           DebugLineFeed();
+                           DebugPrintNumber(u8Number-1);
+                           DebugPrintf(": "); 
+                           u8Number++;
+               }
+
+         }
       indexCheck=G_u8DebugScanfCharCount-1;
     }
     else
@@ -255,49 +317,86 @@ if(G_u8DebugScanfCharCount == 1)
  if(bOffInput)
  {
    if(G_au8DebugScanfBuffer[index]!='\r')
-    { 
+   {
       if(G_au8DebugScanfBuffer[index]!='-')
       {
        if(indexCheck==index)
        {
-            /*get the number you have scanfed*/
-            u32OffTime = u32OffTime*10 + (G_au8DebugScanfBuffer[index]-'0');
-            index++;
+                  if(G_au8DebugScanfBuffer[index]=='\b')
+                   {
+                     u32OnTime=(u32OnTime-(G_au8DebugScanfBuffer[index-1]-'0'))/10;
+                     index++;       
+                   }
+                  else
+                  {
+                  /*get the number you have scanfed*/
+                  u32OffTime = u32OffTime*10 + (G_au8DebugScanfBuffer[index]-'0');
+                  index++;
+                  }
+              /*check if the input is right,30-39 is the Ascll of 0-9*/
+               if(G_au8DebugScanfBuffer[index-1]<0x30||G_au8DebugScanfBuffer[index-1]>0x39&&G_au8DebugScanfBuffer[index-1]!='\b')
+               {
+                           /*reset code*/
+                           bLedCommand=FALSE;
+                           u32OnTime=0;
+                           u32OffTime=0;
+                           index = 2;
+                           indexCheck = 2;
+                           for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+                               {
+                                 G_au8DebugScanfBuffer[i] = '\0';
+                               }
+                           G_u8DebugScanfCharCount = 0;
+                           bOnInput = TRUE;
+                           bOffInput = FALSE;
+                           /*print the current serial number and helping information*/       
+                           DebugLineFeed();
+                           DebugPrintf("invalid command please check carefully and command again");
+                           DebugLineFeed();
+                           DebugPrintNumber(u8Number-1);
+                           DebugPrintf(": "); 
+                           u8Number++;
+               }
        }
             indexCheck=G_u8DebugScanfCharCount-1;
-      } 
+      
+    }/* if(G_au8DebugScanfBuffer[index]!='-')*/
       else
       {
         index++;
       }
-    }/*if(G_au8DebugScanfBuffer[index]!='\r')*/
-   else
-    {
-         /*add the command to the list*/
-         eUserCommand.bOn = FALSE;
-         eUserCommand.u32Time = u32OffTime;
-         eUserCommand.eCurrentRate = LED_PWM_100;
-         LedDisplayAddCommand(USER_LIST, &eUserCommand);
-         /*reset*/
-         u32OnTime=0;
-         u32OffTime=0;
-         index = 2;
-         indexCheck = 2;
-         for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
-             {
-               G_au8DebugScanfBuffer[i] = '\0';
-             }
-         G_u8DebugScanfCharCount = 0;
-         bOnInput = TRUE;
-         bOffInput = FALSE;
-         /*print the next serial number*/       
-         DebugLineFeed();
-         DebugPrintNumber(u8Number);
-         DebugPrintf(": "); 
-         u8Number++;
-         
-         
-    }
+   }/*if(G_au8DebugScanfBuffer[index]=='\r')*/
+     /*press enter and check if the command is right*/
+   else 
+          {
+               /*add the command to the list*/
+               eUserCommand.bOn = FALSE;
+               eUserCommand.u32Time = u32OffTime;
+               eUserCommand.eCurrentRate = LED_PWM_100;
+               LedDisplayAddCommand(USER_LIST, &eUserCommand);
+               /*reset*/
+               bLedCommand=FALSE;
+               u32OnTime=0;
+               u32OffTime=0;
+               index = 2;
+               indexCheck = 2;
+               for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+                   {
+                     G_au8DebugScanfBuffer[i] = '\0';
+                   }
+               G_u8DebugScanfCharCount = 0;
+               bOnInput = TRUE;
+               bOffInput = FALSE;
+               /*print the next serial number*/       
+               DebugLineFeed();
+               DebugPrintNumber(u8Number);
+               DebugPrintf(": "); 
+               u8Number++;
+          }
+             
+            
+     
+
   }
   /*to show users the recent program*/
   if(G_au8DebugScanfBuffer[0]=='\r')
