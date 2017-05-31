@@ -49,7 +49,12 @@ Variable names shall start with "UserApp1_" and be declared as static.
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
 static u8 u8Number = 2;
-
+static u8 au8RealCode[128];
+static u8 au8User[128];
+static u8 au8UserInput[128];
+static u8 au8CodeInput1[128];
+static u8 au8CodeInput2[128];
+static u8 au8CodeRepeat[128];
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -62,6 +67,343 @@ Function Definitions
 /*--------------------------------------------------------------------------------------------------------------------*/
 /* Protected functions                                                                                                */
 /*--------------------------------------------------------------------------------------------------------------------*/
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1Welcome
+
+Description:
+the Welcome interface
+*/
+static void UserApp1Welcome(void)
+{
+  static bool bMessageon = TRUE;
+  /*to show the welcome ui*/
+  if(bMessageon)
+  {
+    DebugPrintf("********************************************************\n\r                        Welcome\n\rDo you already have an account?(Y/N)\n\r ");
+    bMessageon=FALSE;
+  }
+  if(G_u8DebugScanfCharCount == 1)
+  {
+    DebugLineFeed();
+    if(G_au8DebugScanfBuffer[0]=='Y'||G_au8DebugScanfBuffer[0]=='y')
+    {
+      UserApp1_StateMachine = UserApp1Login;
+      G_au8DebugScanfBuffer[0]='\0';
+      G_u8DebugScanfCharCount=0;
+    }
+    else if(G_au8DebugScanfBuffer[0]=='N'||G_au8DebugScanfBuffer[0]=='n')
+    {
+      UserApp1_StateMachine = UserApp1Join;
+      G_au8DebugScanfBuffer[0]='\0';
+      G_u8DebugScanfCharCount=0;
+    }
+    else
+    {
+       G_au8DebugScanfBuffer[0]='\0';
+       G_u8DebugScanfCharCount=0;
+       DebugPrintf("Invalid command,please input y or n\n\r");       
+    }
+  }/*if(G_u8DebugScanfCharCount == 1)*/
+  
+}/*end UserApp1Welcome()*/
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1Join
+
+Description:
+help user create a new account.
+*/
+static void UserApp1Join(void)
+{
+   static u8 u8Index=0;
+   static bool bMessageon = TRUE;
+   static bool bUser = TRUE;
+   static bool bNewCode = FALSE;
+   static bool bRepeatCode = FALSE;
+   static bool bCreate = FALSE;
+   static bool bConfirm = TRUE;
+   
+  /*to show the join ui*/
+  if(bMessageon)
+  {
+    DebugPrintf("********************************************************\n\rUser name:     ");
+    bMessageon=FALSE;
+  }
+  /*input the user name*/
+  if(bUser)
+  {
+      for(u8Index=0;u8Index<G_u8DebugScanfCharCount;u8Index++)
+      {
+        if(G_au8DebugScanfBuffer[u8Index]!='\r')
+        {
+            au8User[u8Index]=G_au8DebugScanfBuffer[u8Index];
+        }
+        else
+        {
+            bNewCode=TRUE;
+            bUser=FALSE;
+            u8Index=0;          
+            for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+            {
+              G_au8DebugScanfBuffer[i] = '\0';
+            }
+            G_u8DebugScanfCharCount=0;
+            DebugLineFeed();
+            DebugPrintf("New Code:      ");
+            /*to control the final condition*/
+            bConfirm=TRUE;
+            break;
+        }
+      }
+  }/* if(bUser)*/
+  
+  /* input new code*/
+  if(bNewCode)
+  {
+    for(u8Index=0;u8Index<G_u8DebugScanfCharCount;u8Index++)
+      {
+        if(G_au8DebugScanfBuffer[u8Index]!='\r')
+        {
+            au8CodeInput1[u8Index]=G_au8DebugScanfBuffer[u8Index];
+        }
+        else
+        {
+            bRepeatCode=TRUE;
+            bNewCode=FALSE;
+            u8Index=0;
+            for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+            {
+              G_au8DebugScanfBuffer[i] = '\0';
+            }
+            G_u8DebugScanfCharCount=0;
+            DebugLineFeed();
+            DebugPrintf("Repeat Code:   ");
+            break;
+        }
+      }/*for*/
+  }/* if(bNewCode)*/
+
+   /* confirm the code*/
+  if(bRepeatCode)
+  {
+    for(u8Index=0;u8Index<G_u8DebugScanfCharCount;u8Index++)
+      {
+        if(G_au8DebugScanfBuffer[u8Index]!='\r')
+        {
+            au8CodeInput2[u8Index]=G_au8DebugScanfBuffer[u8Index];
+        }
+        else
+        {
+            bCreate=TRUE;
+            bRepeatCode=FALSE;
+            u8Index=0;
+            for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+            {
+              G_au8DebugScanfBuffer[i] = '\0';
+            }
+            DebugLineFeed();
+            break;
+        }
+      }/*for*/
+  }/* if(bRepeatCode)*/
+
+  
+  
+  
+  /* compare the code*/
+  if(bCreate)
+  {
+          /*check if the code was similar*/
+          for(u8Index=0;u8Index<10;u8Index++)
+          {
+            if(au8CodeInput1[u8Index]!=au8CodeInput2[u8Index])
+            {
+                bCreate = FALSE;
+                bConfirm = FALSE;
+                bUser=TRUE;
+                u8Index=0;
+                for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+                {
+                  G_au8DebugScanfBuffer[i] = '\0';
+                } 
+                G_u8DebugScanfCharCount=0;
+                DebugLineFeed();
+                DebugPrintf("Sorry the code are not the same.\n\r");
+                DebugLineFeed();
+                DebugPrintf("User name:     ");
+                break;
+            }
+          }/*for*/
+           if(bConfirm)
+           {
+                u8Index=0;              
+                for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+                {
+                  G_au8DebugScanfBuffer[i] = '\0';
+                }
+                for(u8Index=0;u8Index<G_u8DebugScanfCharCount;u8Index++)
+                {    
+                  au8RealCode[u8Index]=au8CodeInput1[u8Index];       
+                }
+                G_u8DebugScanfCharCount=0;
+                DebugLineFeed();
+                DebugPrintf("Congratulations! You have an account now!\n\r");
+                G_u8DebugScanfCharCount=0;
+                bConfirm = FALSE;
+                DebugLineFeed(); 
+                UserApp1_StateMachine = UserApp1Login;
+                /*back to the log in statement*/
+                
+
+           }/*if(bConfirm)*/
+          
+  }/*if(bCreate)*/
+
+ 
+            
+    
+               
+}/*end UserApp1Join()*/
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1Login
+
+Description:
+log in
+*/
+static void UserApp1Login(void)
+{
+  static u8 u8Index=0;
+  static bool bUser = TRUE;
+  static bool bCode = FALSE;
+  static bool bCompare = FALSE;
+  static bool bMessageon = TRUE;
+  static bool bConfirm1 = TRUE;
+  /*provide the log in interface*/
+  u8 au8UserApp1Start1[] = "********************************************************\n\r                       Log    in\n\rUser:     ";
+  
+   
+     if(bMessageon)
+      {
+        DebugLineFeed();
+        DebugPrintf("Input User name and code,press enter to confirm.\n\r");
+        DebugLineFeed();
+        DebugPrintf(au8UserApp1Start1);
+        bMessageon=FALSE;
+      }
+     /*input the username*/
+    if(bUser)
+    {
+        for(u8Index=0;u8Index<G_u8DebugScanfCharCount;u8Index++)
+        {
+          if(G_au8DebugScanfBuffer[u8Index]!='\r')
+          {
+              au8UserInput[u8Index]=G_au8DebugScanfBuffer[u8Index];
+          }
+          else
+          {
+              bCode=TRUE;
+              bUser=FALSE;
+              u8Index=0;          
+              for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+              {
+                G_au8DebugScanfBuffer[i] = '\0';
+              }
+              G_u8DebugScanfCharCount=0;
+              DebugLineFeed();
+              DebugPrintf("Code:     ");
+              /*control the final condition*/
+              bConfirm1 = TRUE;
+              break;
+          }
+        }
+    }/* if(bUser)*/ 
+    
+    /*input the code*/
+    if(bCode)
+    {
+        for(u8Index=0;u8Index<G_u8DebugScanfCharCount;u8Index++)
+        {
+          if(G_au8DebugScanfBuffer[u8Index]!='\r')
+          {
+              au8CodeInput1[u8Index]=G_au8DebugScanfBuffer[u8Index];
+          }
+          else
+          {
+              bCompare=TRUE;
+              bCode=FALSE;
+              u8Index=0;
+              for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+              {
+                G_au8DebugScanfBuffer[i] = '\0';
+              }
+              DebugLineFeed();
+              break;
+          }
+        }/*for*/
+    }/*if(bCode)*/
+    
+    if(bCompare)
+    {
+      /*check the account*/ 
+         for(u8Index=0;u8Index<10;u8Index++)
+          {
+            if(au8UserInput[u8Index]!=au8User[u8Index])
+            {
+                bConfirm1 = FALSE;
+                bCompare = FALSE;
+                bUser=TRUE;
+                u8Index=0;
+                for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+                {
+                  G_au8DebugScanfBuffer[i] = '\0';
+                } 
+                DebugLineFeed();
+                //DebugPrintf("Sorry the code are not the same.\n\r");
+                break;
+            }
+          }/*for*/
+         
+          /*check the code*/
+          for(u8Index=0;u8Index<10;u8Index++)
+            {
+              if(au8CodeInput1[u8Index]!=au8RealCode[u8Index])
+              {
+                  bConfirm1 = FALSE;
+                  bCompare = FALSE;
+                  bUser=TRUE;
+                  u8Index=0;
+                  for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
+                  {
+                    G_au8DebugScanfBuffer[i] = '\0';
+                  }                 
+                  break;
+              }
+            }/*for*/ 
+         if(bConfirm1)
+         {
+            bCompare = FALSE;
+            bConfirm1 = FALSE;
+            DebugPrintf("Log in Successfully!\n\r");
+            DebugLineFeed();
+            UserApp1_StateMachine = UserApp1FirstChooseModeState;
+         }
+         else
+         {
+            DebugLineFeed();
+            DebugPrintf("Sorry the user name or code is not correct.\n\r");
+            DebugLineFeed();
+            DebugPrintf("User:     ");
+         }
+         G_u8DebugScanfCharCount=0;   
+    }
+       
+}/*end UserApp1Login()*/
+
 
 /*--------------------------------------------------------------------------------------------------------------------
 Function: UserApp1Initialize
@@ -86,7 +428,7 @@ void UserApp1Initialize(void)
     /* If good initialization, set state to Idle */
   if( 1 )
   {
-    UserApp1_StateMachine = UserApp1FirstChooseModeState;
+    UserApp1_StateMachine = UserApp1Welcome;
   }
   else
   {

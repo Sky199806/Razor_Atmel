@@ -62,6 +62,9 @@ static void UserApp1FirstChooseModeState(void);
 static void UserApp1Mode1(void);
 static void UserApp1Mode2(void);
 static void UserApp1Mode3(void);
+static void UserApp1Welcome(void);
+static void UserApp1Join(void);
+static void UserApp1Login(void);
 #endif /* __USER_APP1_H */
 
 
