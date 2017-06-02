@@ -380,7 +380,8 @@ static void UserApp1Login(void)
                   for(u8 i = 0; i < G_u8DebugScanfCharCount; i++)
                   {
                     G_au8DebugScanfBuffer[i] = '\0';
-                  }                 
+                  }
+                  G_u8DebugScanfCharCount = 0;
                   break;
               }
             }/*for*/ 
@@ -633,7 +634,7 @@ if(G_u8DebugScanfCharCount == 1)
                            DebugLineFeed();
                            DebugPrintf("invalid command please check carefully and command again");
                            DebugLineFeed();
-                           DebugPrintNumber(u8Number-1);
+                           DebugPrintNumber(u8Number-2);
                            DebugPrintf(": "); 
                            u8Number++;
                }
@@ -676,7 +677,7 @@ if(G_u8DebugScanfCharCount == 1)
                   index++;
                   }
               /*check if the input is right,30-39 is the Ascll of 0-9*/
-               if(G_au8DebugScanfBuffer[index-1]<0x30||G_au8DebugScanfBuffer[index-1]>0x39&&G_au8DebugScanfBuffer[index-1]!='\b')
+               if((G_au8DebugScanfBuffer[index-1]<0x30||G_au8DebugScanfBuffer[index-1]>0x39)&&G_au8DebugScanfBuffer[index-1]!='\b')
                {
                            /*reset code*/
                            bLedCommand=FALSE;

@@ -57,13 +57,13 @@
       <file>$PROJ_DIR$\..\..\firmware_mpg_common\application\user_app3.c</file>
       <file>$PROJ_DIR$\Debug\Obj\ant.pbi</file>
       <file>$PROJ_DIR$\Debug\Obj\lcd_nhd-c0220biz.pbi</file>
-      <file>$PROJ_DIR$\Debug\Obj\debug.o</file>
-      <file>$PROJ_DIR$\Debug\Obj\timer.o</file>
-      <file>$PROJ_DIR$\Debug\Obj\utilities.o</file>
-      <file>$PROJ_DIR$\Debug\Obj\user_app2.o</file>
       <file>$PROJ_DIR$\Debug\Obj\main.o</file>
-      <file>$PROJ_DIR$\Debug\Obj\user_app1.o</file>
       <file>$PROJ_DIR$\Debug\Obj\sam3u_uart.pbi</file>
+      <file>$PROJ_DIR$\Debug\Obj\user_app1.o</file>
+      <file>$PROJ_DIR$\Debug\Obj\user_app2.o</file>
+      <file>$PROJ_DIR$\Debug\Obj\utilities.o</file>
+      <file>$PROJ_DIR$\Debug\Obj\timer.o</file>
+      <file>$PROJ_DIR$\Debug\Obj\debug.o</file>
       <file>$PROJ_DIR$\Debug\Obj\sam3u_uart.o</file>
       <file>$PROJ_DIR$\Debug\Obj\sam3u_ssp.o</file>
       <file>$PROJ_DIR$\Debug\Obj\sam3u_i2c.o</file>
@@ -406,7 +406,7 @@
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 101 116 52</file>
+          <file> 101 116 56</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -502,7 +502,7 @@
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 57</file>
+          <file> 52</file>
         </tool>
       </outputs>
       <inputs>
@@ -521,7 +521,7 @@
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 124 114 53</file>
+          <file> 124 114 55</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -544,7 +544,7 @@
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 153 150 55</file>
+          <file> 153 150 51</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -567,7 +567,7 @@
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 131 135 51</file>
+          <file> 131 135 57</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -590,7 +590,7 @@
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 154 151 56</file>
+          <file> 154 151 53</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -669,7 +669,7 @@
       <inputs>
         <tool>
           <name>ILINK</name>
-          <file> 6 69 68 95 67 62 51 65 66 64 63 55 61 113 60 59 58 52 56 54 112 53 147 146 139 148</file>
+          <file> 6 69 68 95 67 62 57 65 66 64 63 51 61 113 60 59 58 56 53 54 112 55 147 146 139 148</file>
         </tool>
       </inputs>
     </file>
