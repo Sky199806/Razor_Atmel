@@ -1,4 +1,6 @@
+
 /**********************************************************************************************************************
+zeyun wang
 File: user_app1.c                                                                
 
 Description:
@@ -54,7 +56,7 @@ static u8 au8User[128];
 static u8 au8UserInput[128];
 static u8 au8CodeInput1[128];
 static u8 au8CodeInput2[128];
-static u8 au8CodeRepeat[128];
+static u8 au8CodeInput[128];
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -330,7 +332,7 @@ static void UserApp1Login(void)
         {
           if(G_au8DebugScanfBuffer[u8Index]!='\r')
           {
-              au8CodeInput1[u8Index]=G_au8DebugScanfBuffer[u8Index];
+              au8CodeInput[u8Index]=G_au8DebugScanfBuffer[u8Index];
           }
           else
           {
@@ -371,7 +373,7 @@ static void UserApp1Login(void)
           /*check the code*/
           for(u8Index=0;u8Index<10;u8Index++)
             {
-              if(au8CodeInput1[u8Index]!=au8RealCode[u8Index])
+              if(au8CodeInput[u8Index]!=au8RealCode[u8Index])
               {
                   bConfirm1 = FALSE;
                   bCompare = FALSE;
