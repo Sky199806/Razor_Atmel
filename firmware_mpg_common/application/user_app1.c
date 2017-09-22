@@ -51,6 +51,9 @@ extern volatile u32 G_u32ApplicationFlags;             /* From main.c */
 
 extern volatile u32 G_u32SystemTime1ms;                /* From board-specific source file */
 extern volatile u32 G_u32SystemTime1s;                 /* From board-specific source file */
+/* Existing variables (defined in other files)      */
+extern u8 G_au8DebugScanfBuffer[];  /* From debug.c */
+extern u8 G_u8DebugScanfCharCount;  /* From debug.c */
 
 
 /***********************************************************************************************************************
@@ -59,8 +62,10 @@ Variable names shall start with "UserApp1_" and be declared as static.
 ***********************************************************************************************************************/
 static fnCode_type UserApp1_StateMachine;            /* The state machine function pointer */
 //static u32 UserApp1_u32Timeout;                      /* Timeout counter used across states */
-static u8 UserApp1_u8FinalCode[10]=0;
+static bool bState2Mark = FALSE;
+static bool bState1Mark = FALSE;
 
+/*mean the state is state2*/
 /**********************************************************************************************************************
 Function Definitions
 **********************************************************************************************************************/
@@ -83,9 +88,20 @@ Promises:
 */
 void UserApp1Initialize(void)
 {
-   
-   
-    If good initialization, set state to Idle 
+   /*make sure the leds in right statement*/
+    LedOff(BLUE);
+    LedOff(WHITE);
+    LedOff(CYAN);
+    LedOff(GREEN);
+    LedOff(ORANGE);
+    LedOff(RED);
+    LedOff(YELLOW);
+    LedOff(PURPLE);
+    /*clear the lcd*/
+    LCDCommand(LCD_CLEAR_CMD); 
+    
+
+    /*If good initialization, set state to Idle*/ 
   if( 1 )
   {
     UserApp1_StateMachine = UserApp1SM_Idle;
@@ -95,15 +111,6 @@ void UserApp1Initialize(void)
      /*The task isn't properly initialized, so shut it down and don't run */
     UserApp1_StateMachine = UserApp1SM_FailedInit;
   }   
-    LedOff(BLUE);
-    LedOff(WHITE);
-    LedOff(CYAN);
-    LedOff(GREEN);
-    LedOff(ORANGE);
-    LedOff(RED);
-    LedOff(YELLOW);
-    LedOff(PURPLE);
-    
 
   
       
@@ -132,9 +139,97 @@ void UserApp1RunActiveState(void)
 
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-/* Private functions    
-                                                                                              */
+/* Private functions   
 
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1_State1
+
+Description:
+the first statement 
+*/
+static void UserApp1_State1(void)
+{
+  u8 au8Message[] = "STATE 1";
+  static bool bMessageon = TRUE;
+  static u16 u16Counter = 0;
+ 
+  
+  static bool bState1Mark = TRUE;
+    LedOff(RED);
+    LedOff(GREEN);
+    LedOff(YELLOW);
+    LedOff(ORANGE);
+  /*prepare to choose*/
+  if(u16Counter++ >= 10);
+  {
+     u16Counter = 0;
+     UserApp1_StateMachine = UserApp1SM_Idle;
+  }
+  /*to show the information*/
+  LCDMessage(LINE1_START_ADDR, au8Message);
+  
+  /*lit the leds and lcd*/
+  LedOn(WHITE);
+  LedOn(BLUE);
+  LedOn(PURPLE);
+  LedOn(CYAN);
+  /*purple*/
+  LedOn(LCD_RED);
+  LedOff(LCD_GREEN);
+  LedOn(LCD_BLUE);
+ /*operation in tera term*/ 
+  if(bMessageon)
+  {
+    DebugPrintf("Entering state 1\n\r ");
+    bMessageon=FALSE;
+  }
+
+}/*end UserApp1State1()*/
+
+
+/*--------------------------------------------------------------------------------------------------------------------
+Function: UserApp1State2
+
+Description:
+the sec statement
+*/
+static void UserApp1_State2(void)
+{
+  u8 au8Message[] = "STATE 2";
+  static bool bMessageon = TRUE;
+  static u16 u16Counter = 0;
+  
+  
+  bState2Mark = TRUE;
+  /*prepare to choose*/
+  if(u16Counter++ >= 10);
+  {
+     u16Counter = 0;
+     UserApp1_StateMachine = UserApp1SM_Idle;
+  }
+  /*Lcd and leds working*/ 
+  if(bMessageon)
+  {
+    DebugPrintf("Entering state 2\n\r ");
+    bMessageon=FALSE;
+    LedBlink(RED,LED_8HZ);
+    LedBlink(ORANGE,LED_4HZ);
+    LedBlink(YELLOW,LED_2HZ);
+    LedBlink(GREEN,LED_1HZ);  
+    LedOff(WHITE);
+    LedOff(BLUE);
+    LedOff(PURPLE);
+    LedOff(CYAN); 
+  }
+   
+    LCDMessage(LINE1_START_ADDR, au8Message);     
+ 
+    LedPWM(LCD_RED,LED_PWM_100);
+    LedPWM(LCD_GREEN,LED_PWM_40);
+    LedPWM(LCD_BLUE,LED_PWM_10);
+
+}/*end UserApp1State2()*/
+                                                                                              
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 
@@ -146,8 +241,70 @@ State Machine Function Definitions
 /* Wait for ??? */
 
 static void UserApp1SM_Idle(void)
-{
-
+{     
+  static u16 u16BuzzerCounter = 0;
+  static bool bBuzzer = TRUE;
+  
+ 
+  /*state2 is running*/
+  if(bState2Mark)
+  {
+    /*control the buzzer*/
+    if(bBuzzer)
+    {
+      if(u16BuzzerCounter>100)
+      {
+        PWMAudioOff(BUZZER1);
+      }
+      if(u16BuzzerCounter>1000)
+      {
+        u16BuzzerCounter = 0;
+        PWMAudioOn(BUZZER1);
+      }
+    }/* if(bBuzzer)*/
+  }
+  if(WasButtonPressed(BUTTON1))
+  {
+    ButtonAcknowledge(BUTTON1);
+    LCDCommand(LCD_CLEAR_CMD);
+    bBuzzer = FALSE;
+    UserApp1_StateMachine = UserApp1_State1;
+  }
+    if(WasButtonPressed(BUTTON2))
+  {
+    ButtonAcknowledge(BUTTON2);
+    LCDCommand(LCD_CLEAR_CMD);
+    UserApp1_StateMachine = UserApp1_State2;
+  }
+  /*choose state in tera term*/ 
+  if(G_u8DebugScanfCharCount == 2)
+  {
+    if(G_au8DebugScanfBuffer[0]=='1'&&G_au8DebugScanfBuffer[1]=='\r')
+    {  
+      G_au8DebugScanfBuffer[0]='\0';
+      G_au8DebugScanfBuffer[1]='\0';
+      G_u8DebugScanfCharCount=0; 
+      LCDCommand(LCD_CLEAR_CMD);
+      bBuzzer = FALSE;
+      UserApp1_StateMachine = UserApp1_State1;
+      
+    }
+    else if(G_au8DebugScanfBuffer[0]=='2'&&G_au8DebugScanfBuffer[1]=='\r')
+    {
+       LCDCommand(LCD_CLEAR_CMD);
+       G_au8DebugScanfBuffer[0]='\0';
+       G_au8DebugScanfBuffer[1]='\0';
+       G_u8DebugScanfCharCount=0;
+       UserApp1_StateMachine = UserApp1_State2;
+    }
+    else
+    {
+       G_au8DebugScanfBuffer[0]='\0';
+       G_au8DebugScanfBuffer[1]='\0';
+       G_u8DebugScanfCharCount=0;
+       DebugPrintf("Invalid command");
+    }
+  }/*end if(G_u8DebugScanfCharCount == 2)*/
 } /* end UserApp1SM_Idle() */
     
 #if 0
